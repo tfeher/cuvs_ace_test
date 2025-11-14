@@ -17,7 +17,7 @@ or alterantively
 ```
 git clone ssh://git@gitlab-master.nvidia.com:12051/tfeher/cuvs_ace_test.git
 cd cuvs_ace_test
-docker build -t rapids_dev -f .
+docker build -t cuvs_ace_test-1 -f .
 ```
 
 This will download a rapids devcontainer, install the conda packages, compile the library and the example program that we want to run.
