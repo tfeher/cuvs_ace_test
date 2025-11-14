@@ -1,0 +1,30 @@
+FROM "rapidsai/devcontainers:25.12-cpp-mambaforge"
+ENV TERM=linux \
+    DEBIAN_FRONTEND=noninteractive
+    
+SHELL ["/bin/bash", "--login", "-c"]
+ENV PATH=/workspace/conda/bin:$PATH
+
+RUN wget --quiet \
+    https://raw.githubusercontent.com/rapidsai/cuvs/refs/heads/main/conda/environments/bench_ann_cuda-129_arch-`uname -m`.yaml \
+    -O /opt/conda/cuvs_dev_bench_env.yml && \
+    wget --quiet \
+    https://raw.githubusercontent.com/rapidsai/cuvs/refs/heads/main/conda/environments/all_cuda-129_arch-`uname -m`.yaml \
+-O /opt/conda/cuvs_dev_all_env.yml 
+RUN umask 0002 && mamba create -n cuvs_dev python=3.12 && \
+    mamba env update -n cuvs_dev --file=/opt/conda/cuvs_dev_bench_env.yml && \
+    mamba env update -n cuvs_dev --file=/opt/conda/cuvs_dev_all_env.yml && mamba install -n cuvs_dev s3fs conda-forge::pyarrow
+RUN umask 0002 && echo -e "\n. /opt/conda/etc/profile.d/conda.sh\nconda activate cuvs_dev" >> ~/.bashrc
+
+RUN cd /opt && git clone https://github.com/rapidsai/cuvs.git cuvs && \
+    wget -O cuvs/examples/cpp/src/cagra_hnsw_ace_example.cu https://raw.githubusercontent.com/tfeher/cuvs/refs/heads/ace-disk-example2/examples/cpp/src/cagra_hnsw_ace_example.cu && \
+    mkdir cuvs/examples/cpp/build && cd cuvs/examples/cpp/build && \
+    cmake .. -DCUVS_NVTX=ON  -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_CUDA_ARCHITECTURES="80;90" -DCMAKE_BUILD_TYPE=Release && \
+    make -j
+
+RUN echo "wget https://gist.githubusercontent.com/tfeher/edf7ce247258d63e1fd2c6c3c174d087/raw/ee54fa1556bcedf48b7090e9e8f8d69f00338258/download_openai_5M.py && \
+    python download_openai_5M.py && \
+    rm /tmp/data/openai_5M/*.parquet && \
+    mv /tmp/data/openai_5M /workspace/" > opt/download_openai_5M.sh
+
+ENTRYPOINT ["/bin/bash"]

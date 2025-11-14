@@ -12,6 +12,14 @@ cd cuvs_ace_test
 docker compose up -d
 ```
 
+or alterantively
+
+```
+git clone ssh://git@gitlab-master.nvidia.com:12051/tfeher/cuvs_ace_test.git
+cd cuvs_ace_test
+docker build -t rapids_dev -f .
+```
+
 This will download a rapids devcontainer, install the conda packages, compile the library and the example program that we want to run.
 
 ## Get data
