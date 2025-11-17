@@ -6,30 +6,34 @@ CAGRA-HNSW index building in memory constrained environment.
 - CUDA driver compatible with CTK 12.9
 
 ## Prepare container
+Using docker compose
 ```
 git clone ssh://git@gitlab-master.nvidia.com:12051/tfeher/cuvs_ace_test.git
 cd cuvs_ace_test
 docker compose up -d
 ```
 
-or alterantively
+or alterantively using 
 
 ```
 git clone ssh://git@gitlab-master.nvidia.com:12051/tfeher/cuvs_ace_test.git
 cd cuvs_ace_test
-docker build -t cuvs_ace_test-1 -f .
+docker build -t cuvs_ace_test-1 .
+docker run  --gpus=all -it  --rm --shm-size=16GB -v $PWD:/workspace -w /workspace cuvs_ace_test-1
 ```
 
 This will download a rapids devcontainer, install the conda packages, compile the library and the example program that we want to run.
 
-## Get data
+## OpenAI-5M test
+
+### Get data
 ```
 docker exec -it cuvs_ace_test-1 /bin/bash
 bash /opt/download_openai_5M.sh
 ```
 
 
-## Run test
+### Run test
 ```
 /opt/cuvs/examples/cpp/build/CAGRA_HNSW_ACE_EXAMPLE 
 ```
@@ -107,4 +111,27 @@ Query 0 neighbor indices: =[2358717,691283,337009,926692,3027347,763450,2580165,
 Query 0 neighbor distances: =[529.184,529.187,529.204,529.23,529.261,529.27,529.287,529.302,529.307,529.316,529.318,529.321];
 Query 1 neighbor indices: =[695107,1555179,1351852,3008696,4100039,2196965,3887503,1954627,2318853,3198749,2233486,1128536];
 Query 1 neighbor distances: =[513.928,514.073,514.168,514.233,514.302,514.337,514.38,514.411,514.415,514.419,514.436,514.476];
+```
+
+## BIGANN-1B Test
+
+### Build container
+```
+git clone ssh://git@gitlab-master.nvidia.com:12051/tfeher/cuvs_ace_test.git
+cd cuvs_ace_test
+docker build -t cuvs_ace_test-1 .
+```
+### Get data
+
+```
+wget https://dl.fbaipublicfiles.com/billion-scale-ann-benchmarks/bigann/base.1B.u8bin
+```
+
+### Run test
+
+```
+docker run  --gpus=all -it  --rm --shm-size=16GB -v $PWD:/workspace -w /workspace cuvs_ace_test-1
+
+# in the container
+/opt/cuvs/examples/cpp/build/CAGRA_HNSW_ACE_BIGANN
 ```
