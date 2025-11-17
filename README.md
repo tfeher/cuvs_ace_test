@@ -105,12 +105,6 @@ Converting CAGRA index to HNSW
 [   987][17:06:59:711414][info  ] HNSW serialization from disk complete in 25367 ms
 [   987][17:06:59:722594][info  ] HNSW index written to disk at: /tmp/ace_build/hnsw_index.bin
 HNSW index file location: /tmp/ace_build/hnsw_index.bin
-Deserializing HNSW index from disk for search. 
-Searching HNSW index.
-Query 0 neighbor indices: =[2358717,691283,337009,926692,3027347,763450,2580165,4480520,4289055,644160,2038581,1607105];
-Query 0 neighbor distances: =[529.184,529.187,529.204,529.23,529.261,529.27,529.287,529.302,529.307,529.316,529.318,529.321];
-Query 1 neighbor indices: =[695107,1555179,1351852,3008696,4100039,2196965,3887503,1954627,2318853,3198749,2233486,1128536];
-Query 1 neighbor distances: =[513.928,514.073,514.168,514.233,514.302,514.337,514.38,514.411,514.415,514.419,514.436,514.476];
 ```
 
 ## BIGANN-1B Test
