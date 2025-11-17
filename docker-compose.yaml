@@ -22,6 +22,8 @@ services:
 
         RUN cd /opt && git clone https://github.com/rapidsai/cuvs.git cuvs && \
             wget -O cuvs/examples/cpp/src/cagra_hnsw_ace_example.cu https://raw.githubusercontent.com/tfeher/cuvs/refs/heads/ace-disk-example2/examples/cpp/src/cagra_hnsw_ace_example.cu && \
+            wget -O cuvs/examples/cpp/src/cagra_hnsw_ace_bigann.cu https://raw.githubusercontent.com/tfeher/cuvs/refs/heads/ace-disk-example2/examples/cpp/src/cagra_hnsw_ace_bigann.cu && \
+            wget -O cuvs/examples/cpp/CMakeLists.txt https://raw.githubusercontent.com/tfeher/cuvs/refs/heads/ace-disk-example2/examples/cpp/CMakeLists.txt && \
             mkdir cuvs/examples/cpp/build && cd cuvs/examples/cpp/build && \
             cmake .. -DCUVS_NVTX=ON  -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_CUDA_ARCHITECTURES="80;90" -DCMAKE_BUILD_TYPE=Release && \
             make -j
