@@ -124,7 +124,7 @@ wget https://dl.fbaipublicfiles.com/billion-scale-ann-benchmarks/bigann/base.1B.
 ### Run test
 
 ```
-docker run  --gpus=all -it  --rm --shm-size=16GB -v $PWD:/workspace -w /workspace cuvs_ace_test-1
+docker run  --gpus=all -it  --rm --shm-size=1GB -v $PWD:/workspace -w /workspace cuvs_ace_test-1
 
 # in the container
 /opt/cuvs/examples/cpp/build/CAGRA_HNSW_ACE_BIGANN
