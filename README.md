@@ -19,7 +19,7 @@ or alterantively using
 git clone https://github.com/tfeher/cuvs_ace_test.git
 cd cuvs_ace_test
 docker build -t cuvs_ace_test-1 .
-docker run  --gpus=all -it  --rm --shm-size=16GB -v $PWD:/workspace -w /workspace cuvs_ace_test-1
+docker run  --gpus=all -it  --rm --shm-size=1GB -v $PWD:/workspace -w /workspace cuvs_ace_test-1
 ```
 
 This will download a rapids devcontainer, install the conda packages, compile the library and the example program that we want to run.
