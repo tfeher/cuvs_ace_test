@@ -8,7 +8,7 @@ CAGRA-HNSW index building in memory constrained environment.
 ## Prepare container
 Using docker compose
 ```
-git clone ssh://git@gitlab-master.nvidia.com:12051/tfeher/cuvs_ace_test.git
+git clone https://github.com/tfeher/cuvs_ace_test.git
 cd cuvs_ace_test
 docker compose up -d
 ```
@@ -16,7 +16,7 @@ docker compose up -d
 or alterantively using 
 
 ```
-git clone ssh://git@gitlab-master.nvidia.com:12051/tfeher/cuvs_ace_test.git
+git clone https://github.com/tfeher/cuvs_ace_test.git
 cd cuvs_ace_test
 docker build -t cuvs_ace_test-1 .
 docker run  --gpus=all -it  --rm --shm-size=16GB -v $PWD:/workspace -w /workspace cuvs_ace_test-1
