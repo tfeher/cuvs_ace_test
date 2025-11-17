@@ -6,21 +6,23 @@ CAGRA-HNSW index building in memory constrained environment.
 - CUDA driver compatible with CTK 12.9
 
 ## Prepare container
-Using docker compose
-```
-git clone https://github.com/tfeher/cuvs_ace_test.git
-cd cuvs_ace_test
-docker compose up -d
-```
-
-or alterantively using 
-
+Using docker
 ```
 git clone https://github.com/tfeher/cuvs_ace_test.git
 cd cuvs_ace_test
 docker build -t cuvs_ace_test-1 .
 docker run  --gpus=all -it  --rm --shm-size=1GB -v $PWD:/workspace -w /workspace cuvs_ace_test-1
 ```
+
+or alterantively using docker compose
+```
+git clone https://github.com/tfeher/cuvs_ace_test.git
+cd cuvs_ace_test
+docker compose up -d
+```
+
+
+
 
 This will download a rapids devcontainer, install the conda packages, compile the library and the example program that we want to run.
 
