@@ -1,4 +1,6 @@
-#include "../../hnswlib/hnswlib.h"
+// This is an example program derived from hnswlib/examples/example_mt_search.cpp
+
+#include <hnswlib/hnswlib.h>
 #include <thread>
 #include <fcntl.h>
 #include <unistd.h>
