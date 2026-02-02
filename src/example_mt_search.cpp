@@ -253,6 +253,11 @@ int main(int argc, char* argv[]) {
         
         std::cout << "\nef,recall,qps" << std::endl;
         
+        {
+            // Warmup
+            alg_hnsw->setEf(200);
+            std::priority_queue<std::pair<float, hnswlib::labeltype>> result = alg_hnsw->searchKnn(queries.data(), k);
+        }
         for (int ef : ef_values) {
             alg_hnsw->setEf(ef);
             
