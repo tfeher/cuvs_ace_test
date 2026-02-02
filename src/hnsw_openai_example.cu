@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <memory>
 #include <raft/core/device_mdarray.hpp>
+#include <raft/core/logger.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/random/make_blobs.cuh>
 #include <string>
@@ -138,15 +139,19 @@ int main(int argc, char *argv[])
 
   BinaryFile<float> dataset(positional_args[0], max_dataset_rows);
 
+  std::cout << "Dataset shape: [" << dataset.rows() << ", " << dataset.cols() << "]" << std::endl;
+
+  raft::default_logger().set_level(rapids_logger::level_enum::debug);
+
   // HNSW index parameters
   hnsw::index_params params;
-  params.M = 24;
+  int M = 24;
   params.ef_construction = 200;
   params.hierarchy = cuvs::neighbors::hnsw::HnswHierarchy::GPU;
 
   auto index_params =
       cagra::index_params::from_hnsw_params(dataset.view().extents(),
-                                            params.M,
+                                            M,
                                             params.ef_construction,
                                             cagra::hnsw_heuristic_type::SAME_GRAPH_FOOTPRINT,
                                             params.metric);
@@ -156,8 +161,7 @@ int main(int argc, char *argv[])
 
   // Convert CAGRA index to HNSW
   std::cout << "Converting CAGRA index to HNSW" << std::endl;
-  hnsw::index_params hnsw_params;
-  auto hnsw_index = hnsw::from_cagra(res, hnsw_params, cagra_index);
+  auto hnsw_index = hnsw::from_cagra(res, params, cagra_index);
 
   cuvs::neighbors::hnsw::serialize(res, index_save_path, *hnsw_index);
   std::cout << "HNSW index file location: " << index_save_path << std::endl;
