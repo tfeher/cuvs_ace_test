@@ -165,8 +165,52 @@ ef,recall,qps
 ```
 ### OpenAI 5M
 
+Build with CAGRA-HNSW
+```
+$ ./cuvs_ace_test/build/HNSW_OPENAI_EXAMPLE /ssd/openai_5M/base.5M.fbin  -o openai_5M_cagra.bin 
+Dataset shape: [5000000, 1536]
+Building CAGRA index (search graph)
+[1427392][18:49:38:746130][info  ] CAGRA graph build: reducing IVF-PQ search max_internal_batch_size from 131072 -> 52428 to fit the workspace
+Converting CAGRA index to HNSW
+[1427392][18:52:00:039392][warning] Intermediate graph degree cannot be larger than number of rows in dataset, reducing it to 1
+[1427392][18:52:00:121247][warning] Intermediate graph degree cannot be larger than number of rows in dataset, reducing it to 1
+[1427392][18:52:00:152596][warning] Intermediate graph degree cannot be larger than number of rows in dataset, reducing it to 16
+HNSW index file location: openai_5M_cagra.bin
+HNSW index created in in 191.442 seconds
+```
+Build CAGRA-HNSW on 4 CPU and limited host mem
+```
+$ numactl -C 0-3 ./cuvs_ace_test/build/HNSW_OPENAI_EXAMPLE /ssd/openai_5M/base.5M.fbin  -o openai_5M_cagra.bin 
+Dataset shape: [5000000, 1536]
+Building CAGRA index (search graph)
+[1434316][19:31:58:192723][info  ] CAGRA graph build: reducing IVF-PQ search max_internal_batch_size from 131072 -> 52428 to fit the workspace
+Converting CAGRA index to HNSW
+[1434316][19:35:57:343508][warning] Intermediate graph degree cannot be larger than number of rows in dataset, reducing it to 12
+HNSW index file location: openai_5M_cagra.bin
+HNSW index created in in 410.487 seconds
+```
 
+Search with HNSW
+```
+$ ./example_mt_search /ssd/openai_5M/base.5M.fbin /ssd/openai_5M/gt_old/queries.fbin /ssd/openai_5M/groundtruth.5M.neighbors.ibin -i openai_5M_cagra.bin 
+Dataset shape: [5000000, 1536]
+Queries shape: [1000, 1536]
+Groundtruth shape: [1000, 1000]
+Using 48 threads (based on CPU affinity)
+Loading index from openai_5M_cagra.bin...
+Index loaded with 5000000 elements
+ef,recall,qps
+10,0.8277,11469.2
+20,0.9015,15400
+40,0.9499,9726.02
+80,0.9775,5791.86
+120,0.9841,4195.14
+200,0.9909,2773.12
+400,0.9957,1555.26
+800,0.9975,866.659
+```
 
+Build and Search with HNSW
 ```
 $ ./example_mt_search /ssd/openai_5M/base.5M.fbin /ssd/openai_5M/gt_old/queries.fbin /ssd/openai_5M/groundtruth.5M.neighbors.ibin -o o
 penai_5M_hnsw.bin                                                                                   
