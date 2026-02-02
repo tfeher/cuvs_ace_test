@@ -1,0 +1,299 @@
+#include "../../hnswlib/hnswlib.h"
+#include <thread>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#include <cstring>
+#include <cstdio>
+#include <cmath>
+#include <stdexcept>
+#include <unordered_set>
+#include <vector>
+#include <atomic>
+#include <algorithm>
+#include <mutex>
+#include <map>
+#include <fstream>
+#include <chrono>
+
+#ifdef __linux__
+#include <sched.h>
+#endif
+
+
+template<typename T>
+class BinaryFile {
+public:
+    BinaryFile(const char* filepath, uint32_t max_rows = 0) 
+        : fd_(-1), mapped_ptr_(nullptr), data_(nullptr), file_size_(0) {
+        
+        fd_ = open(filepath, O_RDONLY);
+        if (fd_ == -1) {
+            throw std::runtime_error(std::string("Error opening file: ") + filepath);
+        }
+        
+        uint32_t shape[2];
+        ssize_t bytesRead = read(fd_, shape, 8);
+        if (bytesRead != 8) {
+            close(fd_);
+            throw std::runtime_error(std::string("Error reading shape from file: ") + filepath);
+        }
+        
+        shape_[0] = (max_rows > 0 && max_rows < shape[0]) ? max_rows : shape[0];
+        shape_[1] = shape[1];
+        
+        size_t data_size = shape_[0] * static_cast<size_t>(shape_[1]);
+        size_t header_size = 8;
+        file_size_ = data_size * sizeof(T) + header_size;
+        
+        mapped_ptr_ = (uint8_t*)mmap(nullptr, file_size_, PROT_READ, MAP_SHARED, fd_, 0);
+        if (mapped_ptr_ == MAP_FAILED) {
+            close(fd_);
+            throw std::runtime_error(std::string("Error mmapping file: ") + filepath);
+        }
+        
+        data_ = reinterpret_cast<T*>(mapped_ptr_ + header_size);
+    }
+    
+    ~BinaryFile() {
+        if (mapped_ptr_ != nullptr && mapped_ptr_ != MAP_FAILED) {
+            munmap(mapped_ptr_, file_size_);
+        }
+        if (fd_ != -1) {
+            close(fd_);
+        }
+    }
+    
+    BinaryFile(const BinaryFile&) = delete;
+    BinaryFile& operator=(const BinaryFile&) = delete;
+    
+    T* data() { return data_; }
+    const T* data() const { return data_; }
+    
+    uint32_t rows() const { return shape_[0]; }
+    uint32_t cols() const { return shape_[1]; }
+    
+private:
+    int fd_;
+    uint8_t* mapped_ptr_;
+    T* data_;
+    size_t file_size_;
+    uint32_t shape_[2];
+};
+
+
+// Multithreaded executor
+// The helper function copied from python_bindings/bindings.cpp (and that itself is copied from nmslib)
+// An alternative is using #pragme omp parallel for or any other C++ threading
+template<class Function>
+inline void ParallelFor(size_t start, size_t end, size_t numThreads, Function fn) {
+    if (numThreads <= 0) {
+        numThreads = std::thread::hardware_concurrency();
+    }
+
+    if (numThreads == 1) {
+        for (size_t id = start; id < end; id++) {
+            fn(id, 0);
+        }
+    } else {
+        std::vector<std::thread> threads;
+        std::atomic<size_t> current(start);
+
+        // keep track of exceptions in threads
+        // https://stackoverflow.com/a/32428427/1713196
+        std::exception_ptr lastException = nullptr;
+        std::mutex lastExceptMutex;
+
+        for (size_t threadId = 0; threadId < numThreads; ++threadId) {
+            threads.push_back(std::thread([&, threadId] {
+                while (true) {
+                    size_t id = current.fetch_add(1);
+
+                    if (id >= end) {
+                        break;
+                    }
+
+                    try {
+                        fn(id, threadId);
+                    } catch (...) {
+                        std::unique_lock<std::mutex> lastExcepLock(lastExceptMutex);
+                        lastException = std::current_exception();
+                        /*
+                         * This will work even when current is the largest value that
+                         * size_t can fit, because fetch_add returns the previous value
+                         * before the increment (what will result in overflow
+                         * and produce 0 instead of current + 1).
+                         */
+                        current = end;
+                        break;
+                    }
+                }
+            }));
+        }
+        for (auto &thread : threads) {
+            thread.join();
+        }
+        if (lastException) {
+            std::rethrow_exception(lastException);
+        }
+    }
+}
+
+
+// Get the number of CPUs available to this process (respects CPU affinity)
+int get_num_available_cpus() {
+#ifdef __linux__
+    cpu_set_t cpu_set;
+    CPU_ZERO(&cpu_set);
+    
+    if (sched_getaffinity(0, sizeof(cpu_set), &cpu_set) == 0) {
+        int count = CPU_COUNT(&cpu_set);
+        if (count > 0) {
+            return count;
+        }
+    }
+#endif
+    // Fallback to hardware_concurrency if affinity check fails or not on Linux
+    return std::thread::hardware_concurrency();
+}
+
+
+int main(int argc, char* argv[]) {
+    // Parse command-line options
+    const char* index_load_path = nullptr;
+    const char* index_save_path = nullptr;
+    uint32_t max_dataset_rows = 0;
+    std::vector<const char*> positional_args;
+    
+    for (int i = 1; i < argc; i++) {
+        if (std::strcmp(argv[i], "-i") == 0 && i + 1 < argc) {
+            index_load_path = argv[++i];
+        } else if (std::strcmp(argv[i], "-o") == 0 && i + 1 < argc) {
+            index_save_path = argv[++i];
+        } else if (std::strcmp(argv[i], "-n") == 0 && i + 1 < argc) {
+            max_dataset_rows = std::atoi(argv[++i]);
+        } else {
+            positional_args.push_back(argv[i]);
+        }
+    }
+    
+    if (positional_args.size() != 3) {
+        std::cerr << "Usage: " << argv[0] << " [-i index_file] [-o index_file] [-n max_rows] <dataset_file> <queries_file> <groundtruth_file>" << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    try {
+        BinaryFile<float> dataset(positional_args[0], max_dataset_rows);
+        BinaryFile<float> queries(positional_args[1]);
+        BinaryFile<int> groundtruth(positional_args[2]);
+        
+        std::cout << "Dataset shape: [" << dataset.rows() << ", " << dataset.cols() << "]" << std::endl;
+        std::cout << "Queries shape: [" << queries.rows() << ", " << queries.cols() << "]" << std::endl;
+        std::cout << "Groundtruth shape: [" << groundtruth.rows() << ", " << groundtruth.cols() << "]" << std::endl;
+        
+        if (dataset.cols() != queries.cols()) {
+            std::cerr << "Error: Dataset and queries dimensions don't match ("
+                      << dataset.cols() << " vs " << queries.cols() << ")" << std::endl;
+            return EXIT_FAILURE;
+        }
+        
+        int dim = dataset.cols();
+        int max_elements = dataset.rows();
+        int num_queries = queries.rows();
+        int M = 24;
+        int ef_construction = 200;
+        int num_threads = get_num_available_cpus();
+        std::cout << "Using " << num_threads << " threads (based on CPU affinity)" << std::endl;
+        
+        // Initing or loading index
+        hnswlib::L2Space space(dim);
+        hnswlib::HierarchicalNSW<float>* alg_hnsw = nullptr;
+        
+        if (index_load_path) {
+            std::cout << "Loading index from " << index_load_path << "..." << std::endl;
+            alg_hnsw = new hnswlib::HierarchicalNSW<float>(&space, index_load_path, false);
+            std::cout << "Index loaded with " << alg_hnsw->cur_element_count << " elements" << std::endl;
+        } else {
+            alg_hnsw = new hnswlib::HierarchicalNSW<float>(&space, max_elements, M, ef_construction);
+            
+            // Add data to index
+            std::cout << "Building index with " << max_elements << " points..." << std::endl;
+            std::atomic<size_t> progress(0);
+            size_t report_interval = (max_elements / 100 > 0) ? (max_elements / 100) : 1; // Report every 1%
+            
+            ParallelFor(0, max_elements, num_threads, [&](size_t row, size_t threadId) {
+                alg_hnsw->addPoint((void*)(dataset.data() + dim * row), row);
+                size_t current = progress.fetch_add(1) + 1;
+                if (current % report_interval == 0 || current == max_elements) {
+                    // Only one thread will have each specific 'current' value, so no race on printing
+                    std::cout << "  Progress: " << current << "/" << max_elements 
+                              << " (" << (100.0 * current / max_elements) << "%)" << std::endl;
+                }
+            });
+            std::cout << "Index built successfully" << std::endl;
+        }
+        
+        // Save index if requested
+        if (index_save_path) {
+            std::cout << "Saving index to " << index_save_path << "..." << std::endl;
+            alg_hnsw->saveIndex(index_save_path);
+            std::cout << "Index saved successfully" << std::endl;
+        }
+        
+        // Search with different ef values
+        int k = 10;
+        int num_iterations = 10;
+        std::vector<int> ef_values = {10, 20, 40, 80, 120, 200, 400, 800};
+        
+        std::cout << "\nef,recall,qps" << std::endl;
+        
+        for (int ef : ef_values) {
+            alg_hnsw->setEf(ef);
+            
+            std::vector<std::vector<hnswlib::labeltype>> neighbors(num_queries, std::vector<hnswlib::labeltype>(k));
+            
+            // Run search multiple times to measure average time
+            auto start_time = std::chrono::high_resolution_clock::now();
+            
+            for (int iter = 0; iter < num_iterations; iter++) {
+                ParallelFor(0, num_queries, num_threads, [&](size_t row, size_t threadId) {
+                    std::priority_queue<std::pair<float, hnswlib::labeltype>> result = alg_hnsw->searchKnn(queries.data() + dim * row, k);
+                    for (int j = k - 1; j >= 0; j--) {
+                        neighbors[row][j] = result.top().second;
+                        result.pop();
+                    }
+                });
+            }
+            
+            auto end_time = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+            double avg_time_seconds = duration.count() / 1000000.0 / num_iterations;
+            double qps = num_queries / avg_time_seconds;
+            
+            // Calculate recall (using results from last iteration)
+            int gt_cols = std::min(k, static_cast<int>(groundtruth.cols()));
+            int total_matches = 0;
+            for (int i = 0; i < num_queries; i++) {
+                std::unordered_set<int> gt_set;
+                for (int j = 0; j < gt_cols; j++) {
+                    gt_set.insert(groundtruth.data()[i * groundtruth.cols() + j]);
+                }
+                for (int j = 0; j < k; j++) {
+                    if (gt_set.count(neighbors[i][j])) {
+                        total_matches++;
+                    }
+                }
+            }
+            
+            double recall = static_cast<double>(total_matches) / (num_queries * k);
+            std::cout << ef << "," << recall << "," << qps << std::endl;
+        }
+        
+        delete alg_hnsw;
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+    
+    return 0;
+}
