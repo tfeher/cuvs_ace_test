@@ -249,15 +249,10 @@ int main(int argc, char* argv[]) {
         // Search with different ef values
         int k = 10;
         int num_iterations = 1;
-        std::vector<int> ef_values = {10, 20, 40, 80, 120, 200, 400, 800};
+        std::vector<int> ef_values = {10, 10, 20, 40, 80, 120, 200, 400, 800};
         
         std::cout << "\nef,recall,qps" << std::endl;
         
-        {
-            // Warmup
-            alg_hnsw->setEf(200);
-            std::priority_queue<std::pair<float, hnswlib::labeltype>> result = alg_hnsw->searchKnn(queries.data(), k);
-        }
         for (int ef : ef_values) {
             alg_hnsw->setEf(ef);
             
