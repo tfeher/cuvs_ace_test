@@ -143,6 +143,8 @@ int main(int argc, char *argv[])
 
   raft::default_logger().set_level(rapids_logger::level_enum::debug);
 
+  auto start_time = std::chrono::high_resolution_clock::now();
+
   // HNSW index parameters
   hnsw::index_params params;
   int M = 24;
@@ -165,4 +167,8 @@ int main(int argc, char *argv[])
 
   cuvs::neighbors::hnsw::serialize(res, index_save_path, *hnsw_index);
   std::cout << "HNSW index file location: " << index_save_path << std::endl;
+
+  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_time);
+  double avg_time_seconds = duration.count() / 1000.0;
+  std::cout << "HNSW index created in in " << avg_time_seconds << " seconds" << std::endl;
 }

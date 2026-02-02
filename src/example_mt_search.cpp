@@ -216,6 +216,8 @@ int main(int argc, char* argv[]) {
             alg_hnsw = new hnswlib::HierarchicalNSW<float>(&space, index_load_path, false);
             std::cout << "Index loaded with " << alg_hnsw->cur_element_count << " elements" << std::endl;
         } else {
+            auto start_time = std::chrono::high_resolution_clock::now();
+
             alg_hnsw = new hnswlib::HierarchicalNSW<float>(&space, max_elements, M, ef_construction);
             
             // Add data to index
@@ -232,7 +234,9 @@ int main(int argc, char* argv[]) {
                               << " (" << (100.0 * current / max_elements) << "%)" << std::endl;
                 }
             });
-            std::cout << "Index built successfully" << std::endl;
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_time);
+            double avg_time_seconds = duration.count() / 1000.0;
+            std::cout << "Index built successfully in " << avg_time_seconds << " seconds" << std::endl;
         }
         
         // Save index if requested
@@ -241,10 +245,10 @@ int main(int argc, char* argv[]) {
             alg_hnsw->saveIndex(index_save_path);
             std::cout << "Index saved successfully" << std::endl;
         }
-        
+
         // Search with different ef values
         int k = 10;
-        int num_iterations = 10;
+        int num_iterations = 1;
         std::vector<int> ef_values = {10, 20, 40, 80, 120, 200, 400, 800};
         
         std::cout << "\nef,recall,qps" << std::endl;
