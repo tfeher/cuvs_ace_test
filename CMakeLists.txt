@@ -42,7 +42,12 @@ endif()
 
 # -------------- compile tasks ----------------- #
 add_executable(HNSW_OPENAI_EXAMPLE src/hnsw_openai_example.cu)
+add_executable(CAGRA_HNSW src/cagra_hnsw.cu)
+add_executable(CAGRA_HNSW_2 src/cagra_hnsw_2.cu)
+
 
 # `$<TARGET_NAME_IF_EXISTS:conda_env>` is a generator expression that ensures that targets are
 # installed in a conda environment, if one exists
 target_link_libraries(HNSW_OPENAI_EXAMPLE PRIVATE cuvs::cuvs $<TARGET_NAME_IF_EXISTS:conda_env>)
+target_link_libraries(CAGRA_HNSW PRIVATE cuvs::cuvs $<TARGET_NAME_IF_EXISTS:conda_env>)
+target_link_libraries(CAGRA_HNSW_2 PRIVATE cuvs::cuvs $<TARGET_NAME_IF_EXISTS:conda_env>)
