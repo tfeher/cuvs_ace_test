@@ -58,13 +58,12 @@ int cagra_build_search_ace(raft::device_resources const &dev_resources)
     // HNSW index parameters
     hnsw::index_params hnsw_params;
     int M = 24;
-    hnsw_params.M = 24;
     hnsw_params.ef_construction = 200;
     hnsw_params.hierarchy = cuvs::neighbors::hnsw::HnswHierarchy::GPU;
 
     auto index_params =
         cagra::index_params::from_hnsw_params(dataset_host_view.extents(),
-                                              hnsw_params.M,
+                                              M,
                                               hnsw_params.ef_construction,
                                               cagra::hnsw_heuristic_type::SAME_GRAPH_FOOTPRINT,
                                               hnsw_params.metric);
