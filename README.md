@@ -27,6 +27,12 @@ make
 
 
 ## Run benchmarks
+
+### Create index for openai1m.dat
+Run the executable `CAGRA_HNSW_2` from the same folder where the datafile `hnsw_index_2.bin` is located
+```
+build/CAGRA_HNSW_2
+```
 ### Wiki 1M
 Get dataset
 ```
