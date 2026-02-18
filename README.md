@@ -14,8 +14,8 @@ g++ -std=c++11 -O3 -Ihnswlib -o example_mt_search cuvs_ace_test/src/example_mt_s
 
 ### Install cuvs
 ```
-mamba create -n cuvs_2512 -c rapidsai -c conda-forge cuvs=25.12 cmake=3.30.4
-mamba activate cuvs_test
+conda create -n cuvs_2602 -c rapidsai -c conda-forge cuvs=26.02 cmake=3.30.4
+conda activate cuvs_test
 ```
 ### Build example program
 ```
