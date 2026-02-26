@@ -4,12 +4,6 @@ Download this repository
 git clone --branch cagra_hnsw https://github.com/tfeher/cuvs_ace_test.git
 ```
 
-## HNSW build and search
-```
-git clone --branch v0.8.0 --single-branch https://github.com/nmslib/hnswlib.git
-g++ -std=c++11 -O3 -Ihnswlib -o example_mt_search cuvs_ace_test/src/example_mt_search.cpp -lpthread
-```
-
 ## CAGRA index build
 
 ### Install cuvs
@@ -26,13 +20,23 @@ make
 ```
 
 
-## Run benchmarks
 
-### Create index for openai1m.dat
-Run the executable `CAGRA_HNSW_2` from the same folder where the datafile `hnsw_index_2.bin` is located
+
+## Create index for openai1m.dat
+Run the executable `CAGRA_HNSW_2` from the same folder where the datafile `openai1m.dat` is located
 ```
 build/CAGRA_HNSW_2
+
 ```
+
+## Additional test using HNSW search examples
+
+## HNSW build and search
+```
+git clone --branch v0.8.0 --single-branch https://github.com/nmslib/hnswlib.git
+g++ -std=c++11 -O3 -Ihnswlib -o example_mt_search cuvs_ace_test/src/example_mt_search.cpp -lpthread
+```
+
 ### Wiki 1M
 Get dataset
 ```
