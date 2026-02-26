@@ -9,7 +9,7 @@ git clone --branch cagra_hnsw https://github.com/tfeher/cuvs_ace_test.git
 ### Install cuvs
 ```
 conda create -n cuvs_2602 -c rapidsai -c conda-forge cuvs=26.02 cmake=3.30.4
-conda activate cuvs_test
+conda activate cuvs_2602
 ```
 ### Build example program
 ```
