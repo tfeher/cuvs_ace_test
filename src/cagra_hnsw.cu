@@ -83,11 +83,6 @@ int cagra_build_search_ace(raft::device_resources const &dev_resources)
 
   std::cout << "Building CAGRA index (search graph)" << std::endl;
   auto index = cagra::build(dev_resources, index_params, dataset_host_view);
-  // In-memory build of ACE provides the index in memory, so we can search it directly using
-  // cagra::search
-
-  // On-disk build of ACE stores the reordered dataset, the dataset mapping, and the graph on disk.
-  // The index is not directly usable for CAGRA search. Convert to HNSW for search operations.
 
   // Convert CAGRA index to HNSW
   // For disk-based indices: serializes CAGRA to HNSW format on disk, returns an index with file
@@ -95,7 +90,7 @@ int cagra_build_search_ace(raft::device_resources const &dev_resources)
   std::cout << "Converting CAGRA index to HNSW" << std::endl;
   hnsw::index_params hnsw_params;
   hnsw_params.hierarchy = hnsw::HnswHierarchy::GPU;
-  auto hnsw_index = hnsw::from_cagra(dev_resources, hnsw_params, index);
+  auto hnsw_index = hnsw::from_cagra(dev_resources, hnsw_params, index, dataset_host_view);
 
   // For disk-based indices, the HNSW index file path can be obtained via file_path()
   std::string hnsw_index_path = hnsw_index->file_path();

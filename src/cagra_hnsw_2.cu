@@ -66,6 +66,7 @@ int cagra_build_search_ace(raft::device_resources const &dev_resources)
                                               M,
                                               hnsw_params.ef_construction,
                                               cagra::hnsw_heuristic_type::SAME_GRAPH_FOOTPRINT,
+                                              // cagra::hnsw_heuristic_type::SIMILAR_SEARCH_PERFORMANCE,
                                               hnsw_params.metric);
 
     std::cout << "Building CAGRA index (search graph)" << std::endl;
@@ -80,7 +81,7 @@ int cagra_build_search_ace(raft::device_resources const &dev_resources)
     // For disk-based indices: serializes CAGRA to HNSW format on disk, returns an index with file
     // descriptor For in-memory indices: creates HNSW index in memory
     std::cout << "Converting CAGRA index to HNSW" << std::endl;
-    auto hnsw_index = hnsw::from_cagra(dev_resources, hnsw_params, index);
+    auto hnsw_index = hnsw::from_cagra(dev_resources, hnsw_params, index, dataset_host_view);
 
     // For disk-based indices, the HNSW index file path can be obtained via file_path()
     std::string hnsw_index_path = "hnsw_index_2.bin";

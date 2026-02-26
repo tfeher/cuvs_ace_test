@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
 
   // Convert CAGRA index to HNSW
   std::cout << "Converting CAGRA index to HNSW" << std::endl;
-  auto hnsw_index = hnsw::from_cagra(res, params, cagra_index);
+  auto hnsw_index = hnsw::from_cagra(res, params, cagra_index, dataset.view());
 
   cuvs::neighbors::hnsw::serialize(res, index_save_path, *hnsw_index);
   std::cout << "HNSW index file location: " << index_save_path << std::endl;
