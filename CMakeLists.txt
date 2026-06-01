@@ -41,7 +41,7 @@ else()
 endif()
 
 # -------------- compile tasks ----------------- #
-add_executable(HNSW_EXAMPLE src/hnsw_openai_example.cu)
+add_executable(HNSW_EXAMPLE src/hnsw_example.cu)
 
 # `$<TARGET_NAME_IF_EXISTS:conda_env>` is a generator expression that ensures that targets are
 # installed in a conda environment, if one exists
@@ -52,7 +52,7 @@ target_link_libraries(HNSW_EXAMPLE PRIVATE cuvs::cuvs $<TARGET_NAME_IF_EXISTS:co
 if(DEFINED ENV{CONDA_PREFIX})
   set(_conda_stdcxx "$ENV{CONDA_PREFIX}/lib/libstdc++.so")
   if(EXISTS "${_conda_stdcxx}")
-    foreach(_t HNSW_OPENAI_EXAMPLE HNSW_OPENAI_INT8 CAGRA_HNSW CAGRA_HNSW_2)
+    foreach(_t HNSW_EXAMPLE)
       target_link_libraries(${_t} PRIVATE "${_conda_stdcxx}")
     endforeach()
   endif()
