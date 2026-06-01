@@ -9,16 +9,12 @@
 #include <raft/core/device_mdarray.hpp>
 #include <raft/core/logger.hpp>
 #include <raft/core/resources.hpp>
-#include <raft/random/make_blobs.cuh>
 #include <string>
 
 #include <cuvs/neighbors/cagra.hpp>
 #include <cuvs/neighbors/hnsw.hpp>
 #include <cuvs/neighbors/ivf_pq.hpp>
 #include <cuvs/util/host_memory.hpp>
-
-#include <rmm/mr/device_memory_resource.hpp>
-#include <rmm/mr/pool_memory_resource.hpp>
 
 #include <cstdio>
 #include <cstdlib> // for exit
