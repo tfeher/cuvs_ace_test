@@ -32,7 +32,7 @@ RUN /bin/bash -lc "source ${CONDA_DIR}/etc/profile.d/conda.sh && \
     cd /opt && \
     git clone --branch cagra_hnsw_cloudrun https://github.com/tfeher/cuvs_ace_test.git && \
     mkdir cuvs_ace_test/build && cd cuvs_ace_test/build && \
-    cmake .. -DCMAKE_CUDA_ARCHITECTURES="89;100" && \
+    cmake .. -DCMAKE_CUDA_ARCHITECTURES='89;100' && \ 
     make -j"
 
 CMD ["/bin/bash"]

@@ -13,7 +13,6 @@
 #include <string>
 
 #include <cuvs/neighbors/cagra.hpp>
-#include <cuvs/neighbors/graph_build_types.hpp>
 #include <cuvs/neighbors/hnsw.hpp>
 #include <cuvs/neighbors/ivf_pq.hpp>
 #include <cuvs/util/host_memory.hpp>
@@ -147,13 +146,13 @@ int main(int argc, char *argv[])
 
   // HNSW index parameters
   hnsw::index_params params;
-  int M = 24;
+  params.M = 24;
   params.ef_construction = 200;
   params.hierarchy = cuvs::neighbors::hnsw::HnswHierarchy::GPU;
 
   auto index_params =
       cagra::index_params::from_hnsw_params(dataset.view().extents(),
-                                            M,
+                                            params.M,
                                             params.ef_construction,
                                             cagra::hnsw_heuristic_type::SAME_GRAPH_FOOTPRINT,
                                             params.metric);
