@@ -41,17 +41,11 @@ else()
 endif()
 
 # -------------- compile tasks ----------------- #
-add_executable(HNSW_OPENAI_EXAMPLE src/hnsw_openai_example.cu)
-add_executable(HNSW_OPENAI_INT8 src/hnsw_openai_int8.cu)
-add_executable(CAGRA_HNSW src/cagra_hnsw.cu)
-add_executable(CAGRA_HNSW_2 src/cagra_hnsw_2.cu)
+add_executable(HNSW_EXAMPLE src/hnsw_openai_example.cu)
 
 # `$<TARGET_NAME_IF_EXISTS:conda_env>` is a generator expression that ensures that targets are
 # installed in a conda environment, if one exists
-target_link_libraries(HNSW_OPENAI_EXAMPLE PRIVATE cuvs::cuvs $<TARGET_NAME_IF_EXISTS:conda_env>)
-target_link_libraries(HNSW_OPENAI_INT8 PRIVATE cuvs::cuvs $<TARGET_NAME_IF_EXISTS:conda_env>)
-target_link_libraries(CAGRA_HNSW PRIVATE cuvs::cuvs $<TARGET_NAME_IF_EXISTS:conda_env>)
-target_link_libraries(CAGRA_HNSW_2 PRIVATE cuvs::cuvs $<TARGET_NAME_IF_EXISTS:conda_env>)
+target_link_libraries(HNSW_EXAMPLE PRIVATE cuvs::cuvs $<TARGET_NAME_IF_EXISTS:conda_env>)
 
 # Use conda env's libstdc++ when present to match ABI of conda-built libcuvs (avoids
 # undefined __cxa_call_terminate@CXXABI_1.3.15 / GLIBCXX_3.4.31 at link time)
