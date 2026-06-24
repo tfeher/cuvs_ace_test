@@ -8,10 +8,13 @@ git clone --branch cagra_hnsw_cloudrun https://github.com/tfeher/cuvs_ace_test.g
 
 ### Install cuvs
 ```
-conda create -n cuvs_2606 -c rapidsai-nightly -c conda-forge cuvs=26.06 cmake=3.30.4
+conda create -n cuvs_2608 -c rapidsai-nightly -c conda-forge cuvs=26.08 cmake=4.0
 conda activate cuvs_2606
 ```
 ### Build example program
+
+CUDA Toolkit is required for building the example
+
 ```
 mkdir cuvs_ace_test/build
 cd cuvs_ace_test/build
@@ -32,11 +35,18 @@ cuvs_ace_test/build/HNSW_EXAMPLE -o wiki_1M_cagra.bin wiki_all_1M/base.1M.fbin
 ```
 expected output
 ```
-Dataset shape: [1000000, 768]
-Building CAGRA index (search graph)
-[1414576][17:24:53:915357][info  ] CAGRA graph build: reducing IVF-PQ search max_internal_batch_size from 131072 -> 78643 to fit the workspace
-Converting CAGRA index to HNSW
-[1414576][17:25:06:727888][warning] Intermediate graph degree cannot be larger than number of rows in dataset, reducing it to 1
+Dataset shape: [4990000, 1536]
+Building HNSW index (search graph)
+[ 68030][06:30:07:962034][info  ] Considering CAGRA in memory build with IVF-PQ
+[ 68030][06:30:07:975303][info  ] CAGRA in memory build, required host mem  4.4 GB, GPU mem  9.3 GB
+[ 68030][06:30:07:975312][info  ] Available                       host mem 264.0 GB, GPU mem 23.7 GB
+[ 68030][06:30:07:975315][info  ] We have sufficient memory to proceed with in memory build
+[ 68030][06:30:23:612467][info  ] CAGRA graph build: reducing IVF-PQ search max_internal_batch_size from 131072 -> 52428 to fit the workspace
+[ 68030][06:32:15:561414][info  ] hnsw::build - Converting CAGRA index to HNSW format
+[ 68030][06:32:15:561783][info  ] hnsw::from_cagra - in-memory HNSW requires ~32.4 GB host mem, available 262.9 GB
+[ 68030][06:32:16:872381][warning] Intermediate graph degree cannot be larger than number of rows in dataset, reducing it to 1
+[ 68030][06:32:16:935662][warning] Intermediate graph degree cannot be larger than number of rows in dataset, reducing it to 1
+[ 68030][06:32:16:956883][warning] Intermediate graph degree cannot be larger than number of rows in dataset, reducing it to 10
 HNSW index file location: wiki_1M_cagra.bin
-HNSW index created in in 23.797 seconds
+HNSW index created in in 153.874 seconds
 ```

@@ -28,6 +28,7 @@ rapids_cuda_init_architectures(test_cuvs)
 
 project(test_cuvs LANGUAGES CXX CUDA)
 find_package(Threads)
+find_package(CUDAToolkit REQUIRED)
 
 # ------------- configure cuvs -----------------#
 rapids_cpm_init()
@@ -45,7 +46,12 @@ add_executable(HNSW_EXAMPLE src/hnsw_example.cu)
 
 # `$<TARGET_NAME_IF_EXISTS:conda_env>` is a generator expression that ensures that targets are
 # installed in a conda environment, if one exists
-target_link_libraries(HNSW_EXAMPLE PRIVATE cuvs::cuvs $<TARGET_NAME_IF_EXISTS:conda_env>)
+target_link_libraries(HNSW_EXAMPLE PRIVATE 
+  cuvs::cuvs
+  CUDA::nvJitLink
+  CUDA::nvrtc
+  $<TARGET_NAME_IF_EXISTS:conda_env>
+)
 
 # Use conda env's libstdc++ when present to match ABI of conda-built libcuvs (avoids
 # undefined __cxa_call_terminate@CXXABI_1.3.15 / GLIBCXX_3.4.31 at link time)

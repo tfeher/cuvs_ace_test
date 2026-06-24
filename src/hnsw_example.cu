@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
 {
   using namespace cuvs::neighbors;
 
-  const char *index_save_path = nullptr;
+  const char *index_save_path = "hnsw_index.bin";
   uint32_t max_dataset_rows = 0;
   std::vector<const char *> positional_args;
 
@@ -136,29 +136,15 @@ int main(int argc, char *argv[])
 
   std::cout << "Dataset shape: [" << dataset.rows() << ", " << dataset.cols() << "]" << std::endl;
 
-  raft::default_logger().set_level(rapids_logger::level_enum::debug);
-
   auto start_time = std::chrono::high_resolution_clock::now();
 
   // HNSW index parameters
   hnsw::index_params params;
   params.M = 24;
   params.ef_construction = 200;
-  params.hierarchy = cuvs::neighbors::hnsw::HnswHierarchy::GPU;
 
-  auto index_params =
-      cagra::index_params::from_hnsw_params(dataset.view().extents(),
-                                            params.M,
-                                            params.ef_construction,
-                                            cagra::hnsw_heuristic_type::SAME_GRAPH_FOOTPRINT,
-                                            params.metric);
-
-  std::cout << "Building CAGRA index (search graph)" << std::endl;
-  auto cagra_index = cagra::build(res, index_params, dataset.view());
-
-  // Convert CAGRA index to HNSW
-  std::cout << "Converting CAGRA index to HNSW" << std::endl;
-  auto hnsw_index = hnsw::from_cagra(res, params, cagra_index, dataset.view());
+  std::cout << "Building HNSW index (search graph)" << std::endl;
+  auto hnsw_index = hnsw::build(res, params, dataset.view());
 
   cuvs::neighbors::hnsw::serialize(res, index_save_path, *hnsw_index);
   std::cout << "HNSW index file location: " << index_save_path << std::endl;
