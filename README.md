@@ -9,7 +9,7 @@ git clone --branch cagra_hnsw_cloudrun https://github.com/tfeher/cuvs_ace_test.g
 ### Install cuvs
 ```
 conda create -n cuvs_2608 -c rapidsai-nightly -c conda-forge cuvs=26.08 cmake=4.0
-conda activate cuvs_2606
+conda activate cuvs_2608
 ```
 ### Build example program
 
