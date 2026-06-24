@@ -30,8 +30,8 @@ cmake .. -DCMAKE_CUDA_ARCHITECTURES="89"
 make
 ```
 
-### Wiki 1M
-Get dataset
+### Get dataset
+Here we use embedding vectors created from wikipedia paragraphs (1Mx768):
 ```
 wget https://data.rapids.ai/raft/datasets/wiki_all_1M/wiki_all_1M.tar
 mkdir wiki_all_1M
@@ -55,3 +55,5 @@ HNSW index created in in 12.753 seconds
 HNSW index file location: wiki_hnsw_index.bin
 
 ```
+
+

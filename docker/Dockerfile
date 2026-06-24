@@ -1,10 +1,9 @@
-#FROM "nvcr.io/nvidia/cuda:13.3.0-devel-ubuntu24.04"
-FROM "nvcr.io/nvidia/cuda:12.9.2-devel-ubuntu24.04" AS build
+FROM "nvcr.io/nvidia/cuda:13.3.0-devel-ubuntu24.04" AS build
+# FROM "nvcr.io/nvidia/cuda:12.9.2-devel-ubuntu24.04" AS build
 ENV TERM=linux \
     DEBIAN_FRONTEND=noninteractive
 
 SHELL ["/bin/bash", "--login", "-c"]
-# Where Mambaforge will be installed
 ENV CONDA_DIR=/opt/conda
 ENV PATH=${CONDA_DIR}/bin:${PATH}
 
@@ -14,7 +13,6 @@ RUN apt-get update && \
     wget bzip2 ca-certificates git build-essential && \
     rm -rf /var/lib/apt/lists/* && \
     \
-    # Download latest Mambaforge 
     wget "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh" -O /tmp/mambaforge.sh && \
     bash /tmp/mambaforge.sh -b -p ${CONDA_DIR} && \
     rm /tmp/mambaforge.sh && \
@@ -22,7 +20,7 @@ RUN apt-get update && \
     ${CONDA_DIR}/bin/conda init bash
 
 RUN mamba create -n cuvs_2608 -c rapidsai-nightly -c conda-forge cuvs=26.08 cmake=4.0 \
-    'cuda-version>=12.2,<=12.9'
+    'cuda-version=13.3'
 
 RUN echo 'if [ -f "${CONDA_DIR}/etc/profile.d/conda.sh" ]; then' >> /root/.bashrc && \
     echo '    . "${CONDA_DIR}/etc/profile.d/conda.sh"' >> /root/.bashrc && \
