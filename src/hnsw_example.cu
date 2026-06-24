@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <memory>
+
 #include <raft/core/device_mdarray.hpp>
 #include <raft/core/logger.hpp>
 #include <raft/core/resources.hpp>
@@ -15,6 +16,8 @@
 #include <cuvs/neighbors/hnsw.hpp>
 #include <cuvs/neighbors/ivf_pq.hpp>
 #include <cuvs/util/host_memory.hpp>
+
+#include <rmm/mr/pool_memory_resource.hpp>
 
 #include <cstdio>
 #include <cstdlib> // for exit
@@ -96,60 +99,155 @@ private:
   uint32_t shape_[2];
 };
 
-int main(int argc, char *argv[])
+struct app_args
 {
-  using namespace cuvs::neighbors;
+  std::string dataset_path;
+  std::string index_path = "hnsw_index.bin";
+  int max_dataset_rows = 0;
+  int M = 24;
+  int ef_construction = 200;
+};
 
-  const char *index_save_path = "hnsw_index.bin";
-  uint32_t max_dataset_rows = 0;
-  std::vector<const char *> positional_args;
-
-  for (int i = 1; i < argc; i++)
+app_args parse_args(int argc, char **argv)
+{
+  app_args args;
+  bool has_dataset_path = false;
+  bool arg_error = false;
+  for (int i = 1; i < argc; ++i)
   {
-    if (std::strcmp(argv[i], "-o") == 0 && i + 1 < argc)
+    std::string a = argv[i];
+    if (a == "--dataset" && i + 1 < argc)
     {
-      index_save_path = argv[++i];
+      args.dataset_path = argv[++i];
+      has_dataset_path = true;
     }
-    else if (std::strcmp(argv[i], "-n") == 0 && i + 1 < argc)
+    else if (a == "--index_path" && i + 1 < argc)
     {
-      max_dataset_rows = std::atoi(argv[++i]);
+      args.index_path = argv[++i];
+    }
+    else if (a == "--max_rows" && i + 1 < argc)
+    {
+      args.max_dataset_rows = std::stoi(argv[++i]);
+    }
+    else if (a == "--m" && i + 1 < argc)
+    {
+      args.M = std::stoi(argv[++i]);
+    }
+    else if (a == "--efc" && i + 1 < argc)
+    {
+      args.ef_construction = std::stoi(argv[++i]);
     }
     else
     {
-      positional_args.push_back(argv[i]);
+      arg_error = true;
     }
   }
-
-  if (positional_args.size() != 1)
+  if (argc <= 1 || arg_error)
   {
-    std::cerr << "Usage: " << argv[0] << "  [-o index_file] [-n max_rows] <dataset_file>" << std::endl;
-    return EXIT_FAILURE;
+    std::cerr << "Usage: " << argv[0]
+              << " --dataset <file> [--index_path <file>] [--m M] [--efc EF_CONSTRUCTION]\n"
+              << "  dataset is a path to a dataset file in big-ann-benchmarks binary format\n"
+              << "  index_path is the path of the index file to be created\n"
+              << "  M and EF_CONSTRUCTION are hyperparameters for HNSW index build\n";
+    std::exit(EXIT_FAILURE);
   }
+  if (!has_dataset_path)
+  {
+    std::cerr << "Error: --dataset is required\n";
+    std::exit(EXIT_FAILURE);
+  }
+  if (!std::filesystem::exists(args.dataset_path))
+  {
+    std::cerr << "Error: file not found: " << args.dataset_path << "\n";
+    std::exit(EXIT_FAILURE);
+  }
+  return args;
+}
 
-  raft::resources res;
+std::string detect_dtype(const std::string &filename)
+{
+  if (filename.size() > 6 && filename.compare(filename.size() - 6, 6, "f16bin") == 0)
+  {
+    return "half";
+  }
+  else if (filename.size() > 9 && filename.compare(filename.size() - 9, 9, "fp16.fbin") == 0)
+  {
+    return "half";
+  }
+  else if (filename.size() > 4 && filename.compare(filename.size() - 4, 4, "fbin") == 0)
+  {
+    return "float";
+  }
+  else if (filename.size() > 5 && filename.compare(filename.size() - 5, 5, "u8bin") == 0)
+  {
+    return "uint8";
+  }
+  else if (filename.size() > 5 && filename.compare(filename.size() - 5, 5, "i8bin") == 0)
+  {
+    return "int8";
+  }
+  std::cerr << "Cannot determine data type from extension: " << filename << "\n";
+  std::exit(EXIT_FAILURE);
+}
 
-  // Define a pool allocator for temporary arrays. Internal arrays would use the pool, any other allocation
-  // uses the default RMM memory resource. We set a pool with 2 GiB upper limit.
-  raft::resource::set_workspace_to_pool_resource(res, 2 * 1024 * 1024 * 1024ull);
+template <typename T>
+auto hnsw_build_example(raft::resources const &res, const app_args &args) -> int
+{
+  using namespace cuvs::neighbors;
 
-  BinaryFile<float> dataset(positional_args[0], max_dataset_rows);
+  BinaryFile<T> dataset(args.dataset_path.c_str(), args.max_dataset_rows);
 
-  std::cout << "Dataset shape: [" << dataset.rows() << ", " << dataset.cols() << "]" << std::endl;
+  hnsw::index_params params;
+  params.M = args.M;
+  params.ef_construction = args.ef_construction;
 
   auto start_time = std::chrono::high_resolution_clock::now();
 
-  // HNSW index parameters
-  hnsw::index_params params;
-  params.M = 24;
-  params.ef_construction = 200;
-
-  std::cout << "Building HNSW index (search graph)" << std::endl;
   auto hnsw_index = hnsw::build(res, params, dataset.view());
-
-  cuvs::neighbors::hnsw::serialize(res, index_save_path, *hnsw_index);
-  std::cout << "HNSW index file location: " << index_save_path << std::endl;
 
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_time);
   double avg_time_seconds = duration.count() / 1000.0;
   std::cout << "HNSW index created in in " << avg_time_seconds << " seconds" << std::endl;
+
+  cuvs::neighbors::hnsw::serialize(res, args.index_path, *hnsw_index);
+
+  std::cout << "HNSW index file location: " << args.index_path << std::endl;
+
+  return 0;
+}
+
+int main(int argc, char **argv)
+{
+  auto args = parse_args(argc, argv);
+
+  raft::resources res;
+
+  // Define a 2 GiB pool allocator for temporary arrays (used within cuvs algorithms). Only the internal
+  // arrays use the pool, any other allocation uses the default RMM memory resource.
+  // Manually configure pool to allocate up to its limit right away to avoid fragmentation.
+  constexpr std::size_t kWorkspaceLimit = 2ull * 1024 * 1024 * 1024; // 2 GiB
+  rmm::mr::pool_memory_resource pool_mr(
+      rmm::mr::get_current_device_resource_ref(), kWorkspaceLimit, kWorkspaceLimit);
+  raft::resource::set_workspace_resource(
+      res, raft::mr::device_resource{std::move(pool_mr)}, kWorkspaceLimit);
+
+  auto dtype = detect_dtype(args.dataset_path);
+  int result = 0;
+  if (dtype == "float")
+  {
+    result = hnsw_build_example<float>(res, args);
+  }
+  else if (dtype == "half")
+  {
+    result = hnsw_build_example<half>(res, args);
+  }
+  else if (dtype == "uint8")
+  {
+    result = hnsw_build_example<uint8_t>(res, args);
+  }
+  else if (dtype == "int8")
+  {
+    result = hnsw_build_example<int8_t>(res, args);
+  }
+  return result;
 }
