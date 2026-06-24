@@ -37,37 +37,4 @@ RUN /bin/bash -lc "source ${CONDA_DIR}/etc/profile.d/conda.sh && \
     cmake .. -DCMAKE_CUDA_ARCHITECTURES='89;100' && \ 
     make -j"
 
-# Decrease image size from 18 GB to 7 GB.
-
-# RUN mkdir /opt/runtime_libs && \
-#     cp /opt/conda/envs/cuvs_2608/lib/libcuvs.so \
-#     /opt/conda/envs/cuvs_2608/lib/libstdc++.so.6 \
-#     /opt/conda/envs/cuvs_2608/lib/librmm.so \
-#     /opt/conda/envs/cuvs_2608/lib/librapids_logger.so \
-#     /opt/conda/envs/cuvs_2608/lib/libgcc_s.so.1 \
-#     /usr/lib/x86_64-linux-gnu/libc.so.6 \
-#     /lib64/ld-linux-x86-64.so.2 \
-#     /opt/conda/envs/cuvs_2608/lib/libcublas.so.12 \
-#     /opt/conda/envs/cuvs_2608/lib/libcusolver.so.11 \
-#     /opt/conda/envs/cuvs_2608/lib/libcusparse.so.12 \
-#     /opt/conda/envs/cuvs_2608/lib/libcurand.so.10 \
-#     /opt/conda/envs/cuvs_2608/lib/libnccl.so.2 \
-#     /opt/conda/envs/cuvs_2608/lib/libnvJitLink.so.12 \
-#     /opt/conda/envs/cuvs_2608/lib/libnvrtc.so.12 \
-#     /usr/lib/x86_64-linux-gnu/libdl.so.2 \
-#     /usr/lib/x86_64-linux-gnu/librt.so.1 \
-#     /opt/conda/envs/cuvs_2608/lib/libcublasLt.so.12 \
-#     /opt/conda/envs/cuvs_2608/lib/libgomp.so.1 \
-#     /usr/lib/x86_64-linux-gnu/libpthread.so.0 \
-#     /usr/lib/x86_64-linux-gnu/libm.so.6 \
-#     /opt/runtime_libs/
-
-# FROM "nvcr.io/nvidia/cuda:12.9.2-runtime-ubuntu24.04"
-# WORKDIR /app
-
-# COPY --from=build /opt/cuvs_ace_test /opt/
-# COPY --from=build /opt/runtime_libs/ /usr/local/lib/
-
-# ENV LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH}
-
 CMD ["/bin/bash"]
