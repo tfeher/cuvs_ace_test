@@ -1,5 +1,5 @@
-FROM "nvcr.io/nvidia/cuda:13.3.0-devel-ubuntu24.04" AS build
-# FROM "nvcr.io/nvidia/cuda:12.9.2-devel-ubuntu24.04" AS build
+# FROM "nvcr.io/nvidia/cuda:13.3.0-devel-ubuntu24.04" AS build
+FROM "nvcr.io/nvidia/cuda:12.9.2-devel-ubuntu24.04" AS build
 ENV TERM=linux \
     DEBIAN_FRONTEND=noninteractive
 
@@ -19,8 +19,7 @@ RUN apt-get update && \
     ${CONDA_DIR}/bin/conda clean --all --yes && \ 
     ${CONDA_DIR}/bin/conda init bash
 
-RUN mamba create -n cuvs_2608 -c rapidsai-nightly -c conda-forge cuvs=26.08 cmake=4.0 \
-    'cuda-version=13.3'
+RUN mamba create -n cuvs_2608 -c rapidsai-nightly -c conda-forge cuvs=26.08 cmake=4.0 
 
 RUN echo 'if [ -f "${CONDA_DIR}/etc/profile.d/conda.sh" ]; then' >> /root/.bashrc && \
     echo '    . "${CONDA_DIR}/etc/profile.d/conda.sh"' >> /root/.bashrc && \
@@ -35,4 +34,17 @@ RUN /bin/bash -lc "source ${CONDA_DIR}/etc/profile.d/conda.sh && \
     cmake .. -DCMAKE_CUDA_ARCHITECTURES='89;100' && \ 
     make -j"
 
+# Decrease image size from 18 GB to 5.7 GB.
+
+# Collect runtime deps
+RUN mkdir -p /opt/runtime_libs && \
+    ldd /opt/cuvs_ace_test/build/HNSW_EXAMPLE | awk '/=> \// {print $3}' | sort -u > /tmp/deps.txt && \
+    xargs -a /tmp/deps.txt -I{} cp -v {} /opt/runtime_libs/
+
+FROM "nvcr.io/nvidia/cuda:12.9.2-runtime-ubuntu24.04"
+
+COPY --from=build /opt/cuvs_ace_test/build/HNSW_EXAMPLE /opt/
+COPY --from=build /opt/runtime_libs/ /usr/local/lib/
+
+ENV LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH}
 CMD ["/bin/bash"]
