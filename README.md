@@ -1,13 +1,10 @@
 # cuvs-bench HNSW benchmark
-
 This repository demonstrate how to run cuvs-bench with custom settings for HNSW index building
-
 
 ### Download this repository
 ```
 git clone --branch hnsw_cuvs_bench https://github.com/tfeher/cuvs_ace_test.git
 ```
-
 
 ## OpenAI-5M benchmarks
 
@@ -48,26 +45,7 @@ dataset: openai_5M
 dim: 1536
 distance: euclidean
 gpu_driver_version: 13.2
-gpu_gpuDirectRDMASupported: 1
-gpu_hostNativeAtomicSupported: 0
-gpu_mem_bus_width: 384
-gpu_mem_freq: 9001000000.000000
-gpu_mem_global_size: 47667740672
-gpu_mem_shared_size: 102400
-gpu_name: NVIDIA L40S
-gpu_pageableMemoryAccess: 1
-gpu_pageableMemoryAccessUsesHostPageTables: 0
-gpu_runtime_version: 13.2
-gpu_sm_count: 142
-gpu_sm_freq: 2520000000.000000
-host_cores_used: 16
-host_cpu_freq_max: 3000000000
-host_cpu_freq_min: 1500000000
-host_pagesize: 4096
-host_processors_sysconf: 32
-host_processors_used: 32
-host_total_ram_size: 134922878976
-host_total_swap_size: 0
+...
 n_records: 5000000
 ***WARNING*** ASLR is enabled, the results may have unreproducible noise in them.
 2026-07-06 21:05:57 building 0 / 151515
@@ -101,3 +79,29 @@ Inside the container, run the following command to start the benchmark
 python -m cuvs_bench.run --dataset wiki_all_10M --dataset-path='.'  --configuration=hnswlib_m24.yaml -k 10 -bs 1000 --algorithms=hnswlib --groups=alloy --search-mode=latency
 ```
 
+Expected output
+
+```
+[Registry] Registered backend: cpp_gbench (CppGoogleBenchmarkBackend)
+[Registry] Registered config loader: cpp_gbench (CppGBenchConfigLoader)
+-- Using cuVS bench found in conda environment.
+[I] [21:35:42.930737] Using the dataset file '././wiki_all_10M/base.10M.fbin'
+2026-07-06T21:35:42+00:00
+Running /opt/conda/bin/ann/HNSWLIB_ANN_BENCH
+Run on (32 X 3656.37 MHz CPU s)
+CPU Caches:
+  L1 Data 32 KiB (x16)
+  L1 Instruction 32 KiB (x16)
+  L2 Unified 512 KiB (x16)
+  L3 Unified 32768 KiB (x4)
+Load Average: 0.57, 1.73, 7.34
+command_line: /opt/conda/bin/ann/HNSWLIB_ANN_BENCH --build --data_prefix=. --benchmark_out_format=json --benchmark_counters_tabular=true --benchmark_out=wiki_all_10M/result/build/hnswlib,alloy.json.lock /tmp/wiki_all_10M_build_stiutmjg.json
+dataset: wiki_all_10M
+dim: 768
+distance: euclidean
+...
+n_records: 10000000
+***WARNING*** ASLR is enabled, the results may have unreproducible noise in them.
+2026-07-06 21:35:57 building 0 / 303030
+...
+```
