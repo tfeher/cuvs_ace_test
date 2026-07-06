@@ -5,7 +5,7 @@ This repository demonstrate how to run cuvs-bench with custom settings for HNSW 
 
 ### Download this repository
 ```
-git clone --branch cagra_hnsw_cloudrun https://github.com/tfeher/cuvs_ace_test.git
+git clone --branch hnsw_cuvs_bench https://github.com/tfeher/cuvs_ace_test.git
 ```
 
 
@@ -18,7 +18,7 @@ TODO
 
 Start the cuvs-bench container
 ```
-docker run --user root  --gpus=all -it --rm --shm-size=16GB -v $PWD:/workspace -w /workspace --entrypoint=/bin/bash rapidsai/cuvs-bench:26.06-cuda13-py3.12 
+docker run --user root  --gpus=all -it --rm -v $PWD:/workspace -w /workspace --entrypoint=/bin/bash rapidsai/cuvs-bench:26.06-cuda13-py3.12 
 ```
 
 Inside the container, run the following command to start the benchmark
@@ -82,7 +82,7 @@ n_records: 5000000
 
 ### Get the dataset
 ```
-curl -s https://data.rapids.ai/raft/datasets/wiki_all_10M/wiki_all_10M.tar
+wget https://data.rapids.ai/raft/datasets/wiki_all_10M/wiki_all_10M.tar
 mkdir wiki_all_10M
 tar xf wiki_all_10M.tar -C wiki_all_10M
 ```
@@ -92,12 +92,12 @@ Reference [cuvs-bench doc](https://docs.rapids.ai/api/cuvs/stable/cuvs_bench/wik
 
 start the cuvs-bench container
 ```
-docker run --user root  --gpus=all -it --rm --shm-size=16GB -v $PWD:/workspace -w /workspace --entrypoint=/bin/bash rapidsai/cuvs-bench:26.06-cuda13-py3.12 
+docker run --user root  --gpus=all -it --rm -v $PWD:/workspace -w /workspace --entrypoint=/bin/bash rapidsai/cuvs-bench:26.06-cuda13-py3.12 
 ```
 
 Inside the container, run the following command to start the benchmark
 
 ```
-python -m cuvs_bench.run --dataset openai_5M --dataset-path='.' --dataset-configuration=datasets.yaml --configuration=hnswlib_m24.yaml -k 10 -bs 1000 --algorithms=hnswlib --groups=alloy --search-mode=latency
+python -m cuvs_bench.run --dataset wiki_all_10M --dataset-path='.'  --configuration=hnswlib_m24.yaml -k 10 -bs 1000 --algorithms=hnswlib --groups=alloy --search-mode=latency
 ```
 
