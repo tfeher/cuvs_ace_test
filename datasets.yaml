@@ -1,0 +1,59 @@
+- name: openai_5M
+  dims: 1536
+  base_file: openai_5M/base.5M.fbin
+  query_file: openai_5M/queries.fbin
+  groundtruth_neighbors_file: openai_5M/groundtruth.5M.neighbors.ibin
+  distance: euclidean
+
+- name: laion_1M
+  dims: 768
+  base_file: laion_1M/base.1M.fbin
+  query_file: laion_1M/queries.fbin
+  groundtruth_neighbors_file: laion_1M/groundtruth.1M.neighbors.ibin
+  distance: euclidean
+
+- name: laion_10M
+  dims: 768
+  base_file: laion_10M/base.10M.fbin
+  query_file: laion_10M/queries.fbin
+  groundtruth_neighbors_file: laion_10M/groundtruth.10M.neighbors.ibin
+  distance: euclidean
+
+- name: laion_256_100M
+  subset_size: 100000000
+  dims: 256
+  base_file: laion_256_100M/base.100M.fbin
+  query_file: laion_256_100M/queries.fbin
+  groundtruth_neighbors_file: laion_256_100M/groundtruth.100M.neighbors.ibin
+  distance: euclidean
+
+- name: laion_256_10M
+  subset_size: 10000000
+  dims: 256
+  base_file: laion_256_100M/base.100M.fbin
+  query_file: laion_256_100M/queries.fbin
+  groundtruth_neighbors_file: laion_256_100M/groundtruth.10M.neighbors.ibin
+  distance: euclidean
+
+- name: bigann-1B
+  base_file: bigann/base.1B.u8bin
+  dims: 128
+  query_file: bigann/query.public.10K.u8bin
+  groundtruth_neighbors_file: bigann/groundtruth.neighbors.ibin
+  distance: euclidean
+
+- name: bigann-100M
+  base_file: bigann/base.1B.u8bin
+  subset_size: 100000000
+  dims: 128
+  query_file: bigann/query.public.10K.u8bin
+  groundtruth_neighbors_file: bigann/groundtruth.100M.neighbors.ibin
+  distance: euclidean
+
+- name: bigann-10M
+  base_file: bigann/base.1B.u8bin
+  subset_size: 10000000
+  dims: 128
+  query_file: bigann/query.public.10K.u8bin
+  groundtruth_neighbors_file: bigann/groundtruth.10M.neighbors.ibin
+  distance: euclidean
